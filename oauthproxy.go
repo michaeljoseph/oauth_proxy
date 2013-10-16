@@ -36,10 +36,10 @@ type OauthProxy struct {
 	serveMux           *http.ServeMux
 }
 
-func NewOauthProxy(proxyUrls []*url.URL, clientID string, clientSecret string, validator func(string) bool) *OauthProxy {
-	login, _ := url.Parse("https://accounts.google.com/o/oauth2/auth")
-	redeem, _ := url.Parse("https://accounts.google.com/o/oauth2/token")
-	info, _ := url.Parse("https://www.googleapis.com/oauth2/v2/userinfo")
+func NewOauthProxy(proxyUrls []*url.URL, clientID string, clientSecret string, oauthLoginUrl string, oauthRedemptionUrl string, oauthUserInfoUrl string, validator func(string) bool) *OauthProxy {
+	login, _ := url.Parse(oauthLoginUrl)
+	redeem, _ := url.Parse(oauthRedemptionUrl)
+	info, _ := url.Parse(oauthUserInfoUrl)
 	serveMux := http.NewServeMux()
 	for _, u := range proxyUrls {
 		path := u.Path
@@ -54,7 +54,7 @@ func NewOauthProxy(proxyUrls []*url.URL, clientID string, clientSecret string, v
 
 		clientID:           clientID,
 		clientSecret:       clientSecret,
-		oauthScope:         "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email",
+		oauthScope:         "",
 		oauthRedemptionUrl: redeem,
 		oauthLoginUrl:      login,
 		oauthUserInfoUrl:   info,
@@ -90,8 +90,9 @@ func apiRequest(req *http.Request) (*simplejson.Json, error) {
 	}
 	if resp.StatusCode != 200 {
 		log.Printf("got response code %d - %s", resp.StatusCode, body)
-		return nil, errors.New("api request returned 200 status code")
+		return nil, errors.New("api request returned error code")
 	}
+	log.Printf("got body %s", string(body))
 	data, err := simplejson.NewJson(body)
 	if err != nil {
 		return nil, err
@@ -106,8 +107,8 @@ func (p *OauthProxy) redeemCode(code string) (string, error) {
 	params.Add("client_secret", p.clientSecret)
 	params.Add("code", code)
 	params.Add("grant_type", "authorization_code")
-	log.Printf("body is %s", params.Encode())
 	req, err := http.NewRequest("POST", p.oauthRedemptionUrl.String(), bytes.NewBufferString(params.Encode()))
+	req.Header.Set("Accept", "application/json")
 	if err != nil {
 		log.Printf("failed building request %s", err.Error())
 		return "", err

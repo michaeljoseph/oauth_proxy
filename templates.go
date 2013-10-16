@@ -12,7 +12,7 @@ func getTemplates() *template.Template {
 <head><title>Sign In</title></head>
 <body>
 	<form method="GET" action="/oauth2/start">
-	<button type="submit">Sign In w/ Google</button>
+	<button type="submit">Sign In</button>
 	{{.SignInMessage}}
 	</form>
 	{{ if .Htpasswd }}

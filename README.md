@@ -1,12 +1,10 @@
-google_auth_proxy
+oauth_proxy
 =================
 
+Note: this is a fork of bit.ly's google_oauth_proxy project that works for any oauth provider (where any has actually been tested on Github and Google, YMMV)
 
-A reverse proxy that provides authentication using Google OAuth2 to validate 
+A reverse proxy that provides authentication using an oauth server to validate 
 individual accounts, or a whole google apps domain.
-
-[![Build Status](https://secure.travis-ci.org/bitly/google_auth_proxy.png?branch=master)](http://travis-ci.org/bitly/google_auth_proxy)
-
 
 ## Architecture
 
@@ -52,6 +50,10 @@ Usage of ./google_auth_proxy:
   -redirect-url="": the OAuth Redirect URL. ie: "https://internalapp.yourcompany.com/oauth2/callback"
   -upstream=[]: the http url(s) of the upstream endpoint. If multiple, routing is based on path
   -version=false: print version string
+  -login-url: the OAuth Login URL
+  -redemption-url: the OAuth code redemption URL
+  -user-info-url: the OAuth user info URL
+
 ```
 
 
@@ -84,16 +86,10 @@ server {
 }
 ```
 
-The command line to run `google_auth_proxy` would look like this:
+An example commandline that works with github is:
 
 ```bash
-./google_auth_proxy \
-   --redirect-url="https://internal.yourcompany.com/oauth2/callback"  \
-   --google-apps-domain="yourcompany.com"  \
-   --upstream=http://127.0.0.1:8080/ \
-   --cookie-secret=... \
-   --client-id=... \
-   --client-secret=...
+/oauth_proxy --client-id="f4dddfabbebe5ba" --client-secret="ecb0561717bbf29956f" --upstream="http://localhost:8080/" --cookie-secret="secretsecret" --login-url="https://github.com/login/oauth/authorize" --redirect-url="http://localhost:4180/oauth2/callback/" --redemption-url="https://github.com/login/oauth/access_token" --user-info-url="https://api.github.com/user"
 ```
 
 ## Environment variables

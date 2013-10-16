@@ -17,8 +17,11 @@ var (
 	showVersion             = flag.Bool("version", false, "print version string")
 	httpAddr                = flag.String("http-address", "127.0.0.1:4180", "<addr>:<port> to listen on for HTTP clients")
 	redirectUrl             = flag.String("redirect-url", "", "the OAuth Redirect URL. ie: \"https://internalapp.yourcompany.com/oauth2/callback\"")
-	clientID                = flag.String("client-id", "", "the Google OAuth Client ID: ie: \"123456.apps.googleusercontent.com\"")
+	clientID                = flag.String("client-id", "", "the Oauth Client ID: ie: \"123456.apps.googleusercontent.com\"")
 	clientSecret            = flag.String("client-secret", "", "the OAuth Client Secret")
+	loginUrl                = flag.String("login-url", "", "the OAuth Login URL")
+	redemptionUrl           = flag.String("redemption-url", "", "the OAuth code redemption URL")
+	userInfoUrl             = flag.String("user-info-url", "", "the OAuth user info URL")
 	passBasicAuth           = flag.Bool("pass-basic-auth", true, "pass HTTP Basic Auth information to upstream")
 	htpasswdFile            = flag.String("htpasswd-file", "", "additionally authenticate against a htpasswd file. Entries must be created with \"htpasswd -s\" for SHA encryption")
 	cookieSecret            = flag.String("cookie-secret", "", "the seed string for secure cookies")
@@ -79,7 +82,7 @@ func main() {
 	}
 
 	validator := NewValidator(*googleAppsDomain, *authenticatedEmailsFile)
-	oauthproxy := NewOauthProxy(upstreamUrls, *clientID, *clientSecret, validator)
+	oauthproxy := NewOauthProxy(upstreamUrls, *clientID, *clientSecret, *loginUrl, *redemptionUrl, *userInfoUrl, validator)
 	oauthproxy.SetRedirectUrl(redirectUrl)
 	if *googleAppsDomain != "" && *authenticatedEmailsFile == "" {
 		oauthproxy.SignInMessage = fmt.Sprintf("using a %s email address", *googleAppsDomain)
