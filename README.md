@@ -1,16 +1,16 @@
 oauth_proxy
 =================
 
-Note: this is a fork of bit.ly's google_oauth_proxy project that works for any oauth provider (where any has actually been tested on Github and Google, YMMV)
+Note: this is a fork of bit.ly's google_auth_proxy project that works for any oauth provider (where any has actually been tested on Github and Google, YMMV)
 
 A reverse proxy that provides authentication using an oauth server to validate 
-individual accounts, or a whole google apps domain.
+individual accounts.
 
 ## Architecture
 
 ```
     _______       ___________________       __________
-    |Nginx| ----> |google_auth_proxy| ----> |upstream| 
+    |Nginx| ----> |   oauth_proxy   | ----> |upstream| 
     -------       -------------------       ----------
                           ||
                           \/
@@ -21,14 +21,14 @@ individual accounts, or a whole google apps domain.
 ## Installation
 
 1. [Install Go](http://golang.org/doc/install)
-2. `$ go get github.com/bitly/google_auth_proxy`. This should put the binary in `$GOROOT/bin`
+2. `$ go get github.com/kevin1024/oauth_proxy`. This should put the binary in `$GOROOT/bin`
 
 ## OAuth Configuration
 
-You will need to register an OAuth application with google, and configure it with Redirect URI(s) for the domain you
-intend to run google_auth_proxy on.
+You will need to register an OAuth application with your chosen oauth provider, and configure it with Redirect URI(s) for the domain you
+intend to run oauth_proxy on.
 
-1. Visit to Google Api Console https://code.google.com/apis/console/
+1. Visit the provider's API console
 2. under "API Access", choose "Create an OAuth 2.0 Client ID"
 3. Edit the application settings, and list the Redirect URI(s) where you will run your application. For example: 
 `https://internalapp.yourcompany.com/oauth2/callback`
@@ -37,9 +37,9 @@ intend to run google_auth_proxy on.
 ## Command Line Options
 
 ```
-Usage of ./google_auth_proxy:
+Usage of ./gooauth_proxy:
   -authenticated-emails-file="": authenticate against emails via file (one per line)
-  -client-id="": the Google OAuth Client ID: ie: "123456.apps.googleusercontent.com"
+  -client-id="": the  OAuth Client ID: ie: "123456.apps.googleusercontent.com"
   -client-secret="": the OAuth Client Secret
   -cookie-domain="": an optional cookie domain to force cookies to
   -cookie-secret="": the seed string for secure cookies
@@ -59,7 +59,7 @@ Usage of ./google_auth_proxy:
 
 ## Example Configuration
 
-This example has a [Nginx](http://nginx.org/) SSL endpoint proxying to `google_auth_proxy` on port `4180`. 
+This example has a [Nginx](http://nginx.org/) SSL endpoint proxying to `oauth_proxy` on port `4180`. 
 `google_auth_proxy` then authenticates requests for an upstream application running on port `8080`. The external 
 endpoint for this example would be `https://internal.yourcompany.com/`.
 
@@ -98,7 +98,7 @@ The environment variables `google_auth_client_id`, `google_auth_secret` and `goo
 
 ## Endpoint Documentation
 
-Google auth proxy responds directly to the following endpoints. All other endpoints will be authenticated.
+ogooauth proxy responds directly to the following endpoints. All other endpoints will be authenticated.
 
 * /oauth2/sign_in - the login page, which also doubles as a sign out page (it clears cookies)
 * /oauth2/start - a URL that will redirect to start the oauth cycle
