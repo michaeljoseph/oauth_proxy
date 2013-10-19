@@ -14,7 +14,7 @@ individual accounts.
     -------       -------------------       ----------
                           ||
                           \/
-                  [google oauth2 api]
+                  [oauth2 api]
 ```
 
 
@@ -60,7 +60,7 @@ Usage of ./gooauth_proxy:
 ## Example Configuration
 
 This example has a [Nginx](http://nginx.org/) SSL endpoint proxying to `oauth_proxy` on port `4180`. 
-`google_auth_proxy` then authenticates requests for an upstream application running on port `8080`. The external 
+`oauth_proxy` then authenticates requests for an upstream application running on port `8080`. The external 
 endpoint for this example would be `https://internal.yourcompany.com/`.
 
 An example Nginx config follows. Note the use of `Strict-Transport-Security` header to pin requests to SSL 
@@ -94,7 +94,7 @@ An example commandline that works with github is:
 
 ## Environment variables
 
-The environment variables `google_auth_client_id`, `google_auth_secret` and `google_auth_cookie_secret` can be used in place of the corresponding command-line arguments.
+The environment variables `client_id`, `client_secret` and `cookie_secret` can be used in place of the corresponding command-line arguments.
 
 ## Endpoint Documentation
 
