@@ -20,13 +20,9 @@ updatedeps:
 	@echo $(DEPS) | xargs -n1 go get -d -u
 
 clean:
-	@rm -rf bin/ local/ pkg/ src/ website/.sass-cache website/build
+	@rm -rf bin/ local/ pkg/ src/
 
 format:
 	go fmt ./...
-
-test: deps
-	@echo "$(OK_COLOR)==> Testing Packer...$(NO_COLOR)"
-	go test ./...
 
 .PHONY: all clean deps format test updatedeps
