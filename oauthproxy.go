@@ -2,7 +2,7 @@ package main
 
 import (
 	"bytes"
-	"encoding/base64"
+    "encoding/base64"
 	"errors"
 	"fmt"
 	"github.com/bitly/go-simplejson"
@@ -167,6 +167,8 @@ func (p *OauthProxy) ClearCookie(rw http.ResponseWriter, req *http.Request) {
 
 func (p *OauthProxy) SetCookie(rw http.ResponseWriter, req *http.Request, val string) {
 
+    println("setting cookie! magic string is " + val)
+
 	domain := strings.Split(req.Host, ":")[0] // strip the port (if any)
 	if *cookieDomain != "" && strings.HasSuffix(domain, *cookieDomain) {
 		domain = *cookieDomain
@@ -180,6 +182,7 @@ func (p *OauthProxy) SetCookie(rw http.ResponseWriter, req *http.Request, val st
 		HttpOnly: true,
 		// Secure: req. ... ? set if X-Scheme: https ?
 	}
+	fmt.Printf("calling http setcookie with %#v", cookie)
 	http.SetCookie(rw, cookie)
 }
 
@@ -278,6 +281,12 @@ func (p *OauthProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 			p.ErrorPage(rw, 500, "Internal Error", err.Error())
 			return
 		}
+
+
+
+
+        /*
+
 		// validate user
 		email, err := p.getUserInfo(token)
 		if err != nil {
@@ -288,8 +297,11 @@ func (p *OauthProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 		// set cookie, or deny
 		if p.Validator(email) {
-			log.Printf("authenticating %s completed", email)
-			p.SetCookie(rw, req, email)
+            */
+
+        if p.Validator(token) {
+			log.Printf("authenticatingcompleted")
+			p.SetCookie(rw, req, "igor")
 			http.Redirect(rw, req, "/", 302)
 			return
 		} else {

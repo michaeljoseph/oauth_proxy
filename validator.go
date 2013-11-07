@@ -44,3 +44,12 @@ func NewValidator(domain string, usersFile string) func(string) bool {
 	}
 	return validator
 }
+
+func NewCommandValidator(command string) func(string) bool {
+
+    validator := func(authToken string) bool {
+        println("called my validator with " + authToken)
+        return false
+    }
+    return validator
+}
