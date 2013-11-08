@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"os"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 )
 
@@ -28,7 +28,7 @@ var (
 	cookieDomain            = flag.String("cookie-domain", "", "an optional cookie domain to force cookies to")
 	googleAppsDomain        = flag.String("google-apps-domain", "", "authenticate against the given google apps domain")
 	authenticatedEmailsFile = flag.String("authenticated-emails-file", "", "authenticate against emails via file (one per line)")
-    userVerificationCommand = flag.String("user-verification-command", "", "external command, takes the auth token as AUTH_TOKEN env variable, returns 0 if user should be logged in")
+	userVerificationCommand = flag.String("user-verification-command", "", "external command, takes the auth token as AUTH_TOKEN env variable, returns 0 if user should be logged in")
 	upstreams               = StringArray{}
 )
 
