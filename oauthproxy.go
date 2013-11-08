@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"github.com/bitly/go-simplejson"
@@ -27,19 +26,16 @@ type OauthProxy struct {
 	redirectUrl        *url.URL // the url to receive requests at
 	oauthRedemptionUrl *url.URL // endpoint to redeem the code
 	oauthLoginUrl      *url.URL // to redirect the user to
-	oauthUserInfoUrl   *url.URL
 	oauthScope         string
 	clientID           string
 	clientSecret       string
 	SignInMessage      string
-	HtpasswdFile       *HtpasswdFile
 	serveMux           *http.ServeMux
 }
 
-func NewOauthProxy(proxyUrls []*url.URL, clientID string, clientSecret string, oauthLoginUrl string, oauthRedemptionUrl string, oauthUserInfoUrl string, validator func(string) bool) *OauthProxy {
+func NewOauthProxy(proxyUrls []*url.URL, clientID string, clientSecret string, oauthLoginUrl string, oauthRedemptionUrl string, validator func(string) bool) *OauthProxy {
 	login, _ := url.Parse(oauthLoginUrl)
 	redeem, _ := url.Parse(oauthRedemptionUrl)
-	info, _ := url.Parse(oauthUserInfoUrl)
 	serveMux := http.NewServeMux()
 	for _, u := range proxyUrls {
 		path := u.Path
@@ -57,7 +53,6 @@ func NewOauthProxy(proxyUrls []*url.URL, clientID string, clientSecret string, o
 		oauthScope:         "",
 		oauthRedemptionUrl: redeem,
 		oauthLoginUrl:      login,
-		oauthUserInfoUrl:   info,
 		serveMux:           serveMux,
 	}
 }
@@ -126,29 +121,6 @@ func (p *OauthProxy) redeemCode(code string) (string, error) {
 	return access_token, nil
 }
 
-func (p *OauthProxy) getUserInfo(token string) (string, error) {
-	params := url.Values{}
-	params.Add("access_token", token)
-	endpoint := fmt.Sprintf("%s?%s", p.oauthUserInfoUrl.String(), params.Encode())
-	log.Printf("calling %s", endpoint)
-	req, err := http.NewRequest("GET", endpoint, nil)
-	if err != nil {
-		log.Printf("failed building request %s", err.Error())
-		return "", err
-	}
-	json, err := apiRequest(req)
-	if err != nil {
-		log.Printf("failed making request %s", err.Error())
-		return "", err
-	}
-	email, err := json.Get("email").String()
-	if err != nil {
-		log.Printf("failed getting email from response %s", err.Error())
-		return "", err
-	}
-	return email, nil
-}
-
 func (p *OauthProxy) ClearCookie(rw http.ResponseWriter, req *http.Request) {
 	domain := strings.Split(req.Host, ":")[0]
 	if *cookieDomain != "" && strings.HasSuffix(domain, *cookieDomain) {
@@ -166,8 +138,6 @@ func (p *OauthProxy) ClearCookie(rw http.ResponseWriter, req *http.Request) {
 }
 
 func (p *OauthProxy) SetCookie(rw http.ResponseWriter, req *http.Request, val string) {
-
-	println("setting cookie! magic string is " + val)
 
 	domain := strings.Split(req.Host, ":")[0] // strip the port (if any)
 	if *cookieDomain != "" && strings.HasSuffix(domain, *cookieDomain) {
@@ -208,29 +178,10 @@ func (p *OauthProxy) SignInPage(rw http.ResponseWriter, req *http.Request, code 
 
 	t := struct {
 		SignInMessage string
-		Htpasswd      bool
 	}{
 		SignInMessage: p.SignInMessage,
-		Htpasswd:      p.HtpasswdFile != nil,
 	}
 	templates.ExecuteTemplate(rw, "sign_in.html", t)
-}
-
-func (p *OauthProxy) ManualSignIn(rw http.ResponseWriter, req *http.Request) (string, bool) {
-	if req.Method != "POST" || p.HtpasswdFile == nil {
-		return "", false
-	}
-	user := req.FormValue("username")
-	passwd := req.FormValue("password")
-	if user == "" {
-		return "", false
-	}
-	// check auth
-	if p.HtpasswdFile.Validate(user, passwd) {
-		log.Printf("authenticated %s via manual sign in", user)
-		return user, true
-	}
-	return "", false
 }
 
 func (p *OauthProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
@@ -242,15 +193,8 @@ func (p *OauthProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	log.Printf("%s %s %s", remoteIP, req.Method, req.URL.Path)
 
 	var ok bool
-	var user string
 	if req.URL.Path == signInPath {
-		user, ok = p.ManualSignIn(rw, req)
-		if ok {
-			p.SetCookie(rw, req, user)
-			http.Redirect(rw, req, "/", 302)
-		} else {
-			p.SignInPage(rw, req, 200)
-		}
+		p.SignInPage(rw, req, 200)
 		return
 	}
 	if req.URL.Path == oauthStartPath {
@@ -282,47 +226,19 @@ func (p *OauthProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		/*
-
-			// validate user
-			email, err := p.getUserInfo(token)
-			if err != nil {
-				log.Printf("error redeeming code %s", err.Error())
-				p.ErrorPage(rw, 500, "Internal Error", err.Error())
-				return
-			}
-
-			// set cookie, or deny
-			if p.Validator(email) {
-		*/
-
-		if p.Validator(token) {
-			log.Printf("authenticatingcompleted")
-			p.SetCookie(rw, req, "igor")
-			http.Redirect(rw, req, "/", 302)
-			return
-		} else {
+		if !p.Validator(token) {
 			p.ErrorPage(rw, 403, "Permission Denied", "Invalid Account")
 			return
 		}
+		p.SetCookie(rw, req, "ok")
+		http.Redirect(rw, req, "/", 302)
 	}
 
 	if !ok {
 		cookie, err := req.Cookie(p.CookieKey)
 		if err == nil {
-			var email string
-			email, ok = validateCookie(cookie, p.CookieSeed)
-			user = strings.Split(email, "@")[0]
+			_, ok = validateCookie(cookie, p.CookieSeed)
 		}
-	}
-
-	if !ok {
-		user, ok = p.CheckBasicAuth(req)
-		// if we want to promote basic auth requests to cookie'd requests, we could do that here
-		// not sure that would be ideal in all circumstances though
-		// if ok {
-		// 	p.SetCookie(rw, req, user)
-		// }
 	}
 
 	if !ok {
@@ -331,34 +247,5 @@ func (p *OauthProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// At this point, the user is authenticated. proxy normally
-	if *passBasicAuth {
-		req.SetBasicAuth(user, "")
-		req.Header["X-Forwarded-User"] = []string{user}
-	}
-
 	p.serveMux.ServeHTTP(rw, req)
-}
-
-func (p *OauthProxy) CheckBasicAuth(req *http.Request) (string, bool) {
-	if p.HtpasswdFile == nil {
-		return "", false
-	}
-	s := strings.SplitN(req.Header.Get("Authorization"), " ", 2)
-	if len(s) != 2 || s[0] != "Basic" {
-		return "", false
-	}
-	b, err := base64.StdEncoding.DecodeString(s[1])
-	if err != nil {
-		return "", false
-	}
-	pair := strings.SplitN(string(b), ":", 2)
-	if len(pair) != 2 {
-		return "", false
-	}
-	if p.HtpasswdFile.Validate(pair[0], pair[1]) {
-		log.Printf("authenticated %s via basic auth", pair[0])
-		return pair[0], true
-	}
-	return "", false
 }

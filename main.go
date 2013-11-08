@@ -21,13 +21,8 @@ var (
 	clientSecret            = flag.String("client-secret", "", "the OAuth Client Secret")
 	loginUrl                = flag.String("login-url", "", "the OAuth Login URL")
 	redemptionUrl           = flag.String("redemption-url", "", "the OAuth code redemption URL")
-	userInfoUrl             = flag.String("user-info-url", "", "the OAuth user info URL")
-	passBasicAuth           = flag.Bool("pass-basic-auth", true, "pass HTTP Basic Auth information to upstream")
-	htpasswdFile            = flag.String("htpasswd-file", "", "additionally authenticate against a htpasswd file. Entries must be created with \"htpasswd -s\" for SHA encryption")
 	cookieSecret            = flag.String("cookie-secret", "", "the seed string for secure cookies")
 	cookieDomain            = flag.String("cookie-domain", "", "an optional cookie domain to force cookies to")
-	googleAppsDomain        = flag.String("google-apps-domain", "", "authenticate against the given google apps domain")
-	authenticatedEmailsFile = flag.String("authenticated-emails-file", "", "authenticate against emails via file (one per line)")
 	userVerificationCommand = flag.String("user-verification-command", "", "external command, takes the auth token as AUTH_TOKEN env variable, returns 0 if user should be logged in")
 	upstreams               = StringArray{}
 )
@@ -42,13 +37,13 @@ func main() {
 
 	// Try to use env for secrets if no flag is set
 	if *clientID == "" {
-		*clientID = os.Getenv("google_auth_client_id")
+		*clientID = os.Getenv("CLIENT_ID")
 	}
 	if *clientSecret == "" {
-		*clientSecret = os.Getenv("google_auth_secret")
+		*clientSecret = os.Getenv("CLIENT_SECRET")
 	}
 	if *cookieSecret == "" {
-		*cookieSecret = os.Getenv("google_auth_cookie_secret")
+		*cookieSecret = os.Getenv("COOKIE_SECRET")
 	}
 
 	if *showVersion {
@@ -83,17 +78,9 @@ func main() {
 	}
 
 	validator := NewCommandValidator(*userVerificationCommand)
-	oauthproxy := NewOauthProxy(upstreamUrls, *clientID, *clientSecret, *loginUrl, *redemptionUrl, *userInfoUrl, validator)
+	oauthproxy := NewOauthProxy(upstreamUrls, *clientID, *clientSecret, *loginUrl, *redemptionUrl, validator)
 	oauthproxy.SetRedirectUrl(redirectUrl)
-	if *googleAppsDomain != "" && *authenticatedEmailsFile == "" {
-		oauthproxy.SignInMessage = fmt.Sprintf("using a %s email address", *googleAppsDomain)
-	}
-	if *htpasswdFile != "" {
-		oauthproxy.HtpasswdFile, err = NewHtpasswdFromFile(*htpasswdFile)
-		if err != nil {
-			log.Fatalf("FATAL: unable to open %s %s", *htpasswdFile, err.Error())
-		}
-	}
+
 	listener, err := net.Listen("tcp", *httpAddr)
 	if err != nil {
 		log.Fatalf("FATAL: listen (%s) failed - %s", *httpAddr, err.Error())
