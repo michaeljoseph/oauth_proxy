@@ -24,6 +24,7 @@ var (
 	cookieSecret            = flag.String("cookie-secret", "", "the seed string for secure cookies")
 	cookieDomain            = flag.String("cookie-domain", "", "an optional cookie domain to force cookies to")
 	userVerificationCommand = flag.String("user-verification-command", "", "external command, takes the auth token as AUTH_TOKEN env variable, returns 0 if user should be logged in")
+	oauthScope              = flag.String("oauth-scope", "", "the scope (or scopes) you are requesting from the oauth provider, separated by commas")
 	upstreams               = StringArray{}
 )
 
@@ -78,7 +79,7 @@ func main() {
 	}
 
 	validator := NewCommandValidator(*userVerificationCommand)
-	oauthproxy := NewOauthProxy(upstreamUrls, *clientID, *clientSecret, *loginUrl, *redemptionUrl, validator)
+	oauthproxy := NewOauthProxy(upstreamUrls, *clientID, *clientSecret, *loginUrl, *redemptionUrl, *oauthScope, validator)
 	oauthproxy.SetRedirectUrl(redirectUrl)
 
 	listener, err := net.Listen("tcp", *httpAddr)

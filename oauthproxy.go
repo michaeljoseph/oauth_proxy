@@ -33,7 +33,7 @@ type OauthProxy struct {
 	serveMux           *http.ServeMux
 }
 
-func NewOauthProxy(proxyUrls []*url.URL, clientID string, clientSecret string, oauthLoginUrl string, oauthRedemptionUrl string, validator func(string) bool) *OauthProxy {
+func NewOauthProxy(proxyUrls []*url.URL, clientID string, clientSecret string, oauthLoginUrl string, oauthRedemptionUrl string, oauthScope string, validator func(string) bool) *OauthProxy {
 	login, _ := url.Parse(oauthLoginUrl)
 	redeem, _ := url.Parse(oauthRedemptionUrl)
 	serveMux := http.NewServeMux()
@@ -50,7 +50,7 @@ func NewOauthProxy(proxyUrls []*url.URL, clientID string, clientSecret string, o
 
 		clientID:           clientID,
 		clientSecret:       clientSecret,
-		oauthScope:         "",
+		oauthScope:         oauthScope,
 		oauthRedemptionUrl: redeem,
 		oauthLoginUrl:      login,
 		serveMux:           serveMux,
