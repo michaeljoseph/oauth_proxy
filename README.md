@@ -98,7 +98,7 @@ The environment variables `client_id`, `client_secret` and `cookie_secret` can b
 
 ## Endpoint Documentation
 
-ogooauth proxy responds directly to the following endpoints. All other endpoints will be authenticated.
+oauth_proxy proxy responds directly to the following endpoints. All other endpoints will be authenticated.
 
 * /oauth2/sign_in - the login page, which also doubles as a sign out page (it clears cookies)
 * /oauth2/start - a URL that will redirect to start the oauth cycle
