@@ -53,7 +53,7 @@ Usage of ./gooauth_proxy:
   -login-url: the OAuth Login URL
   -redemption-url: the OAuth code redemption URL
   -user-info-url: the OAuth user info URL
-
+  -user-verification-command: Path to a script that takes the auth token and returns whether to allow the authorization request.
 ```
 
 
@@ -91,6 +91,10 @@ An example commandline that works with github is:
 ```bash
 /oauth_proxy --client-id="f4dddfabbebe5ba" --client-secret="ecb0561717bbf29956f" --upstream="http://localhost:8080/" --cookie-secret="secretsecret" --login-url="https://github.com/login/oauth/authorize" --redirect-url="http://localhost:4180/oauth2/callback/" --redemption-url="https://github.com/login/oauth/access_token" --user-info-url="https://api.github.com/user"
 ```
+
+## User Verification Command
+
+Sometimes, getting an auth token from the oauth2 provider is not sufficient to gain access to your backend.  For example, maybe you want to make sure that the person authenticating belongs to a specific Github organization.  For this, you can create a user verification command.  You can see an [example script](contrib/verify_github_team.py) in contrib.
 
 ## Environment variables
 
