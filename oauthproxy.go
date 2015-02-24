@@ -193,7 +193,7 @@ func (p *OauthProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	var ok bool
 	if req.URL.Path == signInPath {
-		p.SignInPage(rw, req, 200)
+		http.Redirect(rw, req, p.GetLoginURL(), 302)
 		return
 	}
 	if req.URL.Path == oauthStartPath {
