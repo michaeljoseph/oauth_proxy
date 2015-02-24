@@ -48,7 +48,7 @@ func main() {
 	}
 
 	if *showVersion {
-		fmt.Printf("google_auth_proxy v%s\n", VERSION)
+		fmt.Printf("oauth_proxy v%s\n", VERSION)
 		return
 	}
 
