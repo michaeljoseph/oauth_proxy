@@ -65,7 +65,6 @@ func (p *OauthProxy) SetRedirectUrl(redirectUrl *url.URL) {
 func (p *OauthProxy) GetLoginURL() string {
 	params := url.Values{}
 	params.Add("redirect_uri", p.redirectUrl.String())
-	params.Add("approval_prompt", "force")
 	params.Add("scope", p.oauthScope)
 	params.Add("client_id", p.clientID)
 	params.Add("response_type", "code")
